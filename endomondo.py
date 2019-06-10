@@ -1,7 +1,9 @@
-#!/usr/bin/env python3.6
+#!/usr/bin/env python3
 from sys import stdout, stderr
 import json
 
+from kython import import_from
+endoapi = import_from('/L/zzz_syncthing/repos/endoapi', 'endoapi')
 import endoapi.endomondo
 from endomondo_secrets import USERNAME, TOKEN
 
