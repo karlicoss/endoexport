@@ -34,7 +34,16 @@ def main(*, DAL, demo=None):
 
 
 def logger(logger, **kwargs):
-    from kython.klogging import LazyLogger # type: ignore
     # TODO FIXME vendorize
-    return LazyLogger(logger, **kwargs)
+    try:
+        # pylint: disable=import-error
+        from kython.klogging import LazyLogger # type: ignore
+    except ModuleNotFoundError as ie:
+        import logging
+        logging.exception(ie)
+        logging.warning('fallback to default logger!')
+        return logging.getLogger(logger)
+    else:
+        return LazyLogger(logger, **kwargs)
+
 
