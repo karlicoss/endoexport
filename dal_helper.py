@@ -34,7 +34,7 @@ def main(*, DAL, demo=None):
 
 
 def logger(logger, **kwargs):
-    from kython.klogging import LazyLogger
+    from kython.klogging import LazyLogger # type: ignore
     # TODO FIXME vendorize
     return LazyLogger(logger, **kwargs)
 
