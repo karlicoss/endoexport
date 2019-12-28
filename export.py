@@ -4,14 +4,10 @@ import json
 import logging
 
 from export_helper import Json
+from modules.endoapi import endoapi
 
 
 def get_json(**params) -> Json:
-    # TODO get rid of kython
-    # meh, just use my fork
-    from kython import import_from
-    endoapi = import_from('/L/repos/endoapi', 'endoapi')
-    import endoapi.endomondo # type: ignore
     endomondo = endoapi.endomondo.Endomondo(**params)
 
     maximum_workouts = None # None means all
@@ -20,10 +16,6 @@ def get_json(**params) -> Json:
 
 
 def login(email: str):
-    from kython import import_from
-    endoapi = import_from('/L/repos/endoapi', 'endoapi')
-    import endoapi.endomondo # type: ignore
-
     print(f"Logging in as {email}")
     password = input('Your password: ')
     endomondo = endoapi.endomondo.Endomondo(email=email, password=password)

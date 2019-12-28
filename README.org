@@ -1,0 +1,6 @@
+
+* Setup
+
+- ~git clone --recursive~
+   
+   ~--recursive~ is due to endoapi unavailable on PyPi, also my fork got few fixes.
