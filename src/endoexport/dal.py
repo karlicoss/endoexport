@@ -3,19 +3,15 @@ import json
 from pathlib import Path
 from typing import Any, Dict, NamedTuple, Sequence, Union, List, TypeVar, Iterator
 
-import dal_helper
-from dal_helper import Json, PathIsh
+from .exporthelpers import dal_helper
+from .exporthelpers.dal_helper import Res, PathIsh
 
+import endoapi
 
-T = TypeVar('T')
-Res = Union[T, Exception]
-
-
-from modules.endoapi import endoapi
 Workout = endoapi.endomondo.Workout
 
 
-logger = dal_helper.logger('endoexport', level='debug')
+logger = dal_helper.logger('endoexport.dal', level='debug')
 
 
 class DAL:
@@ -40,7 +36,8 @@ def demo(dao: DAL) -> None:
     import matplotlib.pyplot as plt # type: ignore
 
     # TODO split errors properly? move it to dal_helper?
-    workouts = list(w for w in dao.workouts() if not isinstance(w, Exception))
+    # todo or add some basic error handlign stuff to dal_helper?
+    workouts: List[Workout] = [w for w in dao.workouts() if not isinstance(w, Exception)]
 
     print(f"Parsed {len(workouts)} workouts")
     df = pd.DataFrame({

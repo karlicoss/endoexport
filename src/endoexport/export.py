@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import json
-import logging
 
-from export_helper import Json
-from modules.endoapi import endoapi
+from .exporthelpers.export_helper import Json
+
+import endoapi
 
 
 def get_json(**params) -> Json:
@@ -15,25 +15,32 @@ def get_json(**params) -> Json:
     return workouts
 
 
-def login(email: str):
+Token = str
+def login(email: str) -> Token:
     print(f"Logging in as {email}")
     password = input('Your password: ')
     endomondo = endoapi.endomondo.Endomondo(email=email, password=password)
+    token = endomondo.token
     print('Your token:')
-    print(endomondo.token)
+    print(token)
+    return token
 
 
-def main():
-    # TODO add logger configuration to export_helper?
-    # TODO autodetect logzero?
-    from export_helper import setup_parser
-    parser = argparse.ArgumentParser("Tool to export your personal Endomondo data")
+def make_parser():
+    from .exporthelpers.export_helper import setup_parser, Parser
+    parser = Parser("Tool to export your personal Endomondo data")
     setup_parser(parser=parser, params=['email', 'token']) # TODO exports -- need help for each param?
     parser.add_argument('--login', action='store_true', help='''
 This will log you in and give you the token (you'll need your password).
 You only need to do it once, after that just store the token and use it.
     ''')
-    args = parser.parse_args()
+    return parser
+
+
+def main() -> None:
+    # TODO add logger configuration to export_helper?
+    # TODO autodetect logzero?
+    args = make_parser().parse_args()
 
     params = args.params
     dumper = args.dumper
@@ -48,7 +55,4 @@ You only need to do it once, after that just store the token and use it.
 
 
 if __name__ == '__main__':
-    # from kython.klogging import setup_logzero
-    # setup_logzero(logging.getLogger('requests_oauthlib'), level=logging.DEBUG)
     main()
-
