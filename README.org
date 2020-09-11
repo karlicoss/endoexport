@@ -1,6 +1,56 @@
+#+begin_src python :dir src :results drawer :exports results
+import endoexport.export as E
+return E.make_parser().prog
+#+end_src
 
-* Setup
+#+RESULTS:
+:results:
+Tool to export your personal Endomondo data
+:end:
 
-- ~git clone --recursive~
-   
-   ~--recursive~ is due to endoapi unavailable on PyPi, also my fork got few fixes.
+# TODO add pip3 git+https instructions?? wonder if it clones recursively
+* Setting up
+1. Clone *recursively*: =git clone --recursive https://github.com/karlicoss/endoexport=
+2. =pip3 install --user -e .=
+3. Run =./export.py --login= to get your token (you only need to do it once)
+
+* Exporting
+
+#+begin_src python :dir src :results drawer :exports results
+import endoexport.export as E
+return E.make_parser().epilog
+#+end_src
+
+#+RESULTS:
+:results:
+
+Usage:
+
+*Recommended*: create =secrets.py= keeping your api parameters, e.g.:
+
+
+: email = "EMAIL"
+: token = "TOKEN"
+
+
+After that, use:
+
+: ./export.py --secrets /path/to/secrets.py
+
+That way you type less and have control over where you keep your plaintext secrets.
+
+*Alternatively*, you can pass parameters directly, e.g.
+
+: ./export.py --email <email> --token <token>
+
+However, this is verbose and prone to leaking your keys/tokens/passwords in shell history.
+
+
+
+I *highly* recommend checking exported files at least once just to make sure they contain everything you expect from your export. If not, please feel free to ask or raise an issue!
+
+:end:
+
+# TODO include dal section
+
+# FIXME ./export.py is no longer correct way...
