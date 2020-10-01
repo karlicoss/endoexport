@@ -1,19 +1,15 @@
-from setuptools import setup, find_packages # type: ignore
+from setuptools import setup, find_namespace_packages # type: ignore
 
 
 def main():
-    pkg = 'endoexport'
+    pkgs = find_namespace_packages('src')
+    pkg = min(pkgs)
     return setup(
         name=pkg,
         zip_safe=False,
-        packages=[pkg],
+        packages=pkgs,
         package_dir={'': 'src'},
         package_data={pkg: ['py.typed']},
-
-        url='',
-        author='',
-        author_email='',
-        description='',
 
         install_requires=[
             # I'm using some upstream unmerged changes, so unfortunately need my own fork
