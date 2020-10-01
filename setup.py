@@ -19,7 +19,7 @@ def main():
             # 'endoapi @ git+file://DUMMY/path/to/endoapi',
         ],
         extras_require={
-            'testing': ['pytest'],
+            'testing': ['pytest', 'numpy'],
             'linting': ['pytest', 'mypy'],
         },
     )
