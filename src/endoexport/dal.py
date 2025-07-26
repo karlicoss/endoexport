@@ -1,17 +1,19 @@
-#!/usr/bin/env python3
-from datetime import timedelta, datetime, timezone as TZ
-import json
-from pathlib import Path
-from typing import Any, Dict, NamedTuple, Sequence, Union, List, TypeVar, Iterable, Optional
+from __future__ import annotations
 
-from .exporthelpers import dal_helper, logging_helper
-from .exporthelpers.dal_helper import Res, PathIsh, Json
+import json
+from collections.abc import Iterable, Sequence
+from datetime import datetime, timedelta
+from datetime import timezone as TZ
+from pathlib import Path
+from typing import Optional
 
 import endoapi.endomondo
 from endoapi.endomondo import Point
 
+from .exporthelpers import dal_helper, logging_helper
+from .exporthelpers.dal_helper import Json, PathIsh, Res
 
-logger = logging_helper.logger('endoexport.dal', level='debug')
+logger = logging_helper.make_logger(__name__, level='debug')
 
 
 class Workout(endoapi.endomondo.Workout):
@@ -68,25 +70,26 @@ class DAL:
 
 
 class FakeData:
-    def __init__(self, seed: int=0) -> None:
+    def __init__(self, seed: int = 0) -> None:
         self.seed = seed
-        import numpy as np # type: ignore
+        import numpy as np
+
         self.gen = np.random.default_rng(seed=self.seed)
         self.id = 0
 
-
         # hr is sort of a random walk?? probably not very accurate, but whatever
         # also keep within certain boundaries?
-        self.cur_avg_hr  = 160.0
+        self.cur_avg_hr = 160.0
         self.avg_distance_km = 10
         self.avg_duration_min = 40
 
         # todo would be nice to separate parameters and the state
-        import pytz # type: ignore
+        import pytz
+
         self.tz = pytz.timezone('America/New_York')
         self.first_day = datetime.strptime('20100101', '%Y%m%d')
         # todo gaussian distribution??
-       
+
     @property
     def today(self) -> datetime:
         return self.first_day + timedelta(days=self.id)
@@ -96,14 +99,15 @@ class FakeData:
     def generate_one(self) -> Json:
         G = self.gen
         D = timedelta
+
         def N(mean, sigma):
-            return max(G.normal(mean, sigma), 0) # meh
+            return max(G.normal(mean, sigma), 0)  # meh
 
         def ntd(mean, sigma):
             # 'normal' timedelta minutes
             return D(minutes=int(N(mean, sigma)))
 
-        start = self.today + D(hours=10) # todo randomize
+        start = self.today + D(hours=10)  # todo randomize
         distance = N(self.avg_distance_km, 0.5)
         duration = ntd(self.avg_duration_min, 10)
 
@@ -111,20 +115,23 @@ class FakeData:
             return x.astimezone(TZ.utc).strftime('%Y-%m-%d %H:%M:%S UTC')
 
         ###
-        points = [dict(
-            # todo lat, lnt, alt??
-            time=fmtdt(start + D(i)),
-            hr=G.normal(self.cur_avg_hr, 20),
-        ) for i in range(0, duration // D(seconds=1), 3)]
-        d = dict(
-            id=self.id,
-            sport=0, # running
-            start_time=fmtdt(start),
-            duration=duration // D(seconds=1),
-            points=points,
-            speed_avg=distance / (duration / D(hours=1)),
-            heart_rate_avg=self.cur_avg_hr,
-        )
+        points = [
+            {
+                # todo lat, lnt, alt??
+                'time': fmtdt(start + D(i)),
+                'hr': G.normal(self.cur_avg_hr, 20),
+            }
+            for i in range(0, duration // D(seconds=1), 3)
+        ]
+        d = {
+            'id': self.id,
+            'sport': 0,  # running
+            'start_time': fmtdt(start),
+            'duration': duration // D(seconds=1),
+            'points': points,
+            'speed_avg': distance / (duration / D(hours=1)),
+            'heart_rate_avg': self.cur_avg_hr,
+        }
         ###
 
         self.id += 1
@@ -153,30 +160,33 @@ def test(tmp_path: Path) -> None:
 
 
 def demo(dao: DAL) -> None:
-    import pandas as pd # type: ignore
-    import matplotlib.pyplot as plt # type: ignore
+    import matplotlib.pyplot as plt
+    import pandas as pd
 
     # TODO split errors properly? move it to dal_helper?
     # todo or add some basic error handlign stuff to dal_helper?
-    workouts: List[Workout] = [w for w in dao.workouts() if not isinstance(w, Exception)]
+    workouts: list[Workout] = [w for w in dao.workouts() if not isinstance(w, Exception)]
 
     print(f"Parsed {len(workouts)} workouts")
-    df = pd.DataFrame({
-        'dt'      : w.start_time,
-        'calories': w.calories,
-        'sport'   : w.sport,
-    } for w in workouts)
-    df.set_index('dt', inplace=True)
+    df = pd.DataFrame(
+        {
+            'dt': w.start_time,
+            'calories': w.calories,
+            'sport': w.sport,
+        }
+        for w in workouts
+    )
+    df = df.set_index('dt')
 
     print(df)
 
-    cal = df.resample('D').sum() # index by days
-    cal = cal.rolling('30D').mean() # use moving average to smooth out the plot
+    cal = df.resample('D').sum()  # index by days
+    cal = cal.rolling('30D').mean()  # use moving average to smooth out the plot
     cal.plot(title='Exercise (30 days moving average)')
 
     plt.figure()
     breakdown = df.groupby('sport')['calories'].sum()
-    breakdown.plot.pie(title='Breakdown of calories burnt by sport')
+    breakdown.plot.pie(title='Breakdown of calories burnt by sport')  # type: ignore[call-overload]
 
     plt.show()
 
