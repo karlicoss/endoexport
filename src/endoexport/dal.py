@@ -46,7 +46,7 @@ class Workout(endoapi.endomondo.Workout):
 
 class DAL:
     def __init__(self, sources: Sequence[PathIsh]) -> None:
-        self.sources = list(map(Path, sources))
+        self.sources = list(map(dal_helper.pathify, sources))
 
     def workouts(self) -> Iterable[Res[Workout]]:
         # endomondo exports all data, so not worth merging?
