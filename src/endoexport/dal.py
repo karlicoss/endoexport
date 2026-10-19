@@ -6,12 +6,13 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import endoapi.endomondo
+import hpikit.cli.dal as cli
 from endoapi.endomondo import Point
+from hpikit.json import Json, loads
+from hpikit.paths import as_paths
+from kloggy import get_logger
 
-from .exporthelpers import dal_helper, logging_helper
-from .exporthelpers.dal_helper import Json, Res
-
-logger = logging_helper.make_logger(__name__, level='debug')
+logger = get_logger(__name__)
 
 
 class Workout(endoapi.endomondo.Workout):
@@ -38,19 +39,19 @@ class Workout(endoapi.endomondo.Workout):
         return self.calories
 
     @property
-    def measurements(self) -> Sequence[Res[Point]]:
+    def measurements(self) -> Sequence[Point | Exception]:
         return self.points
 
 
 class DAL:
     def __init__(self, sources: Sequence[Path | str]) -> None:
-        self.sources = list(map(dal_helper.pathify, sources))
+        self.sources = as_paths(sources)
 
-    def workouts(self) -> Iterable[Res[Workout]]:
+    def workouts(self) -> Iterable[Workout | Exception]:
         # endomondo exports all data, so not worth merging?
         src = max(self.sources)
 
-        js = json.loads(src.read_text())
+        js = loads(src.read_bytes())
         # for some reason they are in reverse chronological order in jsons
         for j in reversed(js):
             try:
@@ -190,4 +191,4 @@ def demo(dao: DAL) -> None:
 
 
 if __name__ == '__main__':
-    dal_helper.main(DAL=DAL, demo=demo)
+    cli.main(DAL=DAL, demo=demo)
