@@ -3,12 +3,14 @@
 dynamic = ["version"]  # version is managed by build backend
 name = "endoexport"
 dependencies = [
+    "hpikit",
+    "kloggy",
 ]
 requires-python = ">=3.12"
 
 ## these are only useful for pypi
 description = "Tool for exporting your personal Endomondo data"  # shows on project page/in search
-readme      = {file = "README.org", content-type = "text/plain"}
+readme      = "README.md"
 license     = {file = "LICENSE"}
 authors     = [{name = "Dima Gerasimov (@karlicoss)", email = "karlicoss@gmail.com"}]
 maintainers = [{name = "Dima Gerasimov (@karlicoss)", email = "karlicoss@gmail.com"}]
@@ -24,9 +26,7 @@ dal = [
     "endoapi @ git+https://github.com/karlicoss/endoapi.git",
 ]
 optional = [
-    "orjson",  # faster json processing
-    "colorlog",
-    "ijson",  # faster iterative json processing
+    "hpikit[optional]", # faster JSON parsing and transparent compression
 ]
 
 [dependency-groups]
@@ -52,6 +52,13 @@ typecheck = [
     "pandas-stubs",
 
     { include-group = "testing" },
+]
+quarto = [
+    "quarto-cli",
+
+    "numpy",  # for fake data in the DAL example
+
+    "endoexport[dal,optional]",
 ]
 
 
@@ -362,6 +369,19 @@ commands = [
     [
         "{env_python}", "-m", "ty",
         "check",
+        { replace = "posargs", default = [], extend = true },
+    ],
+]
+
+
+[tool.tox.env.quarto]
+dependency_groups = ["quarto"]
+# Quarto relies on same-directory imports here, so unset the base environment value.
+set_env.PYTHONSAFEPATH = ""
+commands = [
+    [
+        "quarto", "render",
+        "README.qmd",
         { replace = "posargs", default = [], extend = true },
     ],
 ]

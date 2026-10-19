@@ -1,0 +1,91 @@
+---
+format:
+  gfm:
+    # keep the line breaks from README.qmd, rather than rewrapping at 72 columns
+    wrap: preserve
+execute:
+  # Hide code by default; individual cells can override this when useful.
+  echo: false
+editor:
+  # this is for VS code
+  # note that it only works for 'preview' mode, not for markdown rendering
+  render-on-save: true
+---
+
+```{python}
+#| label: setup
+import json
+from pathlib import Path
+from tempfile import mkdtemp
+from tomllib import loads
+
+from IPython.display import Markdown
+
+import hpikit.cli.dal
+from hpikit.cli import format_epilog
+
+project = loads(Path("pyproject.toml").read_text())["project"]
+project_name = project["name"]
+git_http_link = f"git+{project['urls']['Homepage']}"
+
+dal_parser = hpikit.cli.dal.make_parser()
+
+
+def inline_code(text: str) -> Markdown:
+    return Markdown(f"`{text}`")
+```
+
+Tool to export your personal Endomondo data
+
+**Note**: Endomondo has shut down, so the export script is only kept for reference in [old/export.py](old/export.py).
+The DAL still reads existing exports.
+
+# Installing
+
+`{python} inline_code(f"pip3 install '{project_name}[dal,optional] @ {git_http_link}'")`
+
+- `dal` is needed to access exported data
+- `optional` is for faster JSON processing
+
+# Using the data
+
+```{python}
+#| label: fake-export
+#| output: false
+from endoexport.dal import FakeData
+
+# the example below runs on fake data, so the README can be generated without real exports
+# reversed since real exports are newest first, and the DAL relies on that
+fake_export = Path(mkdtemp()) / 'endomondo.json'
+fake_export.write_text(json.dumps(FakeData().generate(count=5)[::-1]))
+```
+
+```{python}
+#| label: dal-example
+#| echo: true
+from endoexport.dal import DAL
+
+# e.g. DAL(['/path/to/endomondo/export.json'])
+dal = DAL([fake_export])
+for w in dal.workouts():
+    if isinstance(w, Exception):
+        print('error:', w)
+        continue
+    print(f'{w.start_time:%Y-%m-%d} {w.sport} {w.duration} avg HR {w.heart_rate_avg:.0f}')
+```
+
+The DAL also has a command line interface:
+
+```{python}
+#| label: dal-help
+#| output: asis
+print(format_epilog(dal_parser, prog=f'python3 -m {project_name}.dal'))
+```
+
+# Updating README
+
+This README is generated from a 'literate' Quarto [README.qmd](README.qmd) via the following command:
+
+`tox -e quarto`
+
+If you want to correct something, feel free to simply update `README.md` though, I can reconcile the changes next time I regenerate it.

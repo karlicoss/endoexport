@@ -1,3 +1,0 @@
-[submodule "src/emfitexport/exporthelpers"]
-	path = src/endoexport/exporthelpers
-	url = https://github.com/karlicoss/exporthelpers.git
